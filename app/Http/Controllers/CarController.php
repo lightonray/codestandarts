@@ -9,90 +9,148 @@ use Illuminate\Support\Facades\Validator;
 
 class CarController extends Controller
 {
-    public function index()
-    {
-        // Get all cars for index blade view
-        $cars = Car::with('user')->orderBy('id', 'desc')->paginate(10);
+    /**
+     * The car model instance.
+     *
+     * @var Car
+     */
+    private $car;
 
-        return view('cars.dashboard', [
-            'cars' => $cars,
-        ]);
+    /**
+     * Create a new controller instance.
+     *
+     * @param  Car  $car
+     */
+    public function __construct(Car $car)
+    {
+        $this->car = $car;
     }
 
+    /**
+     * Display a listing of cars.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function index()
+    {
+        $cars = $this->car->with('user')->orderBy('id', 'desc')->paginate(10);
 
+        return view('cars.dashboard', ['cars' => $cars]);
+    }
+
+    /**
+     * Show the form for creating a new car.
+     *
+     * @return \Illuminate\View\View
+     */
     public function create()
     {
         return view('cars.create');
     }
 
-    // Store car on post request
-    public function Store(request $request)
+    /**
+     * Store a newly created car in storage.
+     *
+     * @param  Request  $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function store(Request $request)
     {
-        //Validate post request 
+        
+        $this->validateCar($request);
+
+        
+        $car = $this->createCar($request);
+
+        return redirect()->route('admin.car.index')->with('success', 'Car created successfully');
+    }
+
+    /**
+     * Show the form for editing the specified car.
+     *
+     * @param  int  $id
+     * @return \Illuminate\View\View
+     */
+    public function edit($id)
+    {
+        
+        $car = $this->car->find($id);
+
+        return view('cars.edit', ['car' => $car]);
+    }
+
+    /**
+     * Update the specified car in storage.
+     *
+     * @param  Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function update(Request $request, $id)
+    {
+        
+        $this->validateCar($request);
+
+        
+        $car = $this->car->find($id);
+        $car->update($request->all());
+
+        return redirect()->route('admin.car.index')->with('success', 'Car was updated successfully');
+    }
+
+    /**
+     * Remove the specified car from storage.
+     *
+     * @param  Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function destroy(Request $request, $id)
+    {
+       
+        $car = $this->car->find($id);
+        $car->delete();
+
+        return redirect()->route('admin.car.index')->with('success', 'Car was deleted successfully');
+    }
+
+    /**
+     * Validate the car creation/update request.
+     *
+     * @param  Request  $request
+     * @return void
+     */
+    private function validateCar(Request $request)
+    {
+        
         $this->validate($request, [
-            'make' => 'required',
-            'model' => 'required',
+            'make' => 'required|string|max:255',
+            'model' => 'required|string|max:255',
             'year' => 'required|integer',
         ]);
+    }
 
-        // Store car in database
-        $Cars = new Car([
+    /**
+     * Create a new car instance and store it in the database.
+     *
+     * @param  Request  $request
+     * @return Car
+     */
+    private function createCar(Request $request)
+    {
+        
+        $car = new Car([
             'make' => $request->input('make'),
             'model' => $request->input('model'),
             'year' => $request->input('year'),
         ]);
 
-        // Assign the user_id based on the currently authenticated user
-        $Cars->user_id = auth()->user()->id;
-
-        $Cars->save();
-
-        return redirect()->route('admin.car.index')->with('success', 'Car created successfully');
-    }
-
-
-    public function edit($id){
-        //Get cars by id for edit 
-        $car = Car::find($id);
-
-        return view('cars.edit',[
-            'car' => $car
-        ]);
-    }
-
-
-
-    public function Update(request $request,$id){
         
-        // Validation
-        $validator = Validator::make($request->all(), [
-            'make' => 'required|string|max:255',
-            'model' => 'required|string|max:255',
-            'year' => 'required|string|max:255'
-        ]);
+        $car->user_id = auth()->user()->id;
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 400);
-        }
+       
+        $car->save();
 
-        
-        $CaR = Car::find($id);
-        $CaR->make = $request->make;
-        $CaR->model = $request->model;
-        $CaR->year = $request->year;
-        $CaR->save();
-
-        return redirect()->route('admin.car.index')->with('success', 'Car was updated successfully');
-    }
-
-
-
-    public function Destroy(request $request,$id){
-
-        $car = Car::find($id);
-
-        $car->delete();
-
-        return redirect()->route('admin.car.index')->with('success', 'Car was deleted successfully');
+        return $car;
     }
 }

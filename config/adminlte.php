@@ -306,7 +306,7 @@ return [
         [
             'text' => 'User Management',
             'icon' => 'fas fa-fw fa-file',
-            'url' => '/admin/usermanagement'
+            'url' => '/admin/user/management'
         ],
         [
             'text' => 'Create New User',

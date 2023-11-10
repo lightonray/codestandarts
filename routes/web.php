@@ -28,24 +28,12 @@ Auth::routes();
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware('auth')->group(function () {
         Route::get('/home', [HomeController::class, 'dashboard'])->name('dashboard');
-        Route::get('/usermanagement', [UserController::class, 'index'])->name('index');
+        
+        require __DIR__.'/car_routes.php';
 
-        Route::prefix('car')->name('car.')->group(function () {
-            Route::get('/management', [CarController::class, 'index'])->name('index');
-            Route::get('/createcar', [CarController::class, 'create'])->name('create');
-            Route::post('/createcar', [CarController::class, 'store'])->name('store');
-            Route::get('/editcar/{id}', [CarController::class, 'edit'])->name('edit');
-            Route::post('/editcar/{id}', [CarController::class, 'Update'])->name('update');
-            Route::get('/deletecar/{id}', [CarController::class, 'Destroy'])->name('destroy');
-        });
-
-
-        Route::prefix('user')->name('user.')->group(function () {
-            Route::get('/createuser', [UserController::class, 'create'])->name('create');
-            Route::post('/createuser', [UserController::class, 'store'])->name('store');
-            Route::get('/edituser/{id}', [UserController::class, 'edit'])->name('edit');
-            Route::post('/edituser/{id}', [UserController::class, 'update'])->name('update');
-            Route::get('/deleteuser/{id}', [UserController::class, 'destroy'])->name('destroy');
-        });
+        // Include user routes
+        require __DIR__.'/user_routes.php';
+        
+     
     });
 });
